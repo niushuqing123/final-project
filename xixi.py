@@ -530,9 +530,7 @@ def 边界粒子变流体(上一个粒子画的线):
 
 
 
-
-def 范围边界变流体(pos_xx: ti.f32, pos_yy: ti.f32):
-    搜索半径=0.2
+def 范围边界变流体(pos_xx: ti.f32, pos_yy: ti.f32,搜索半径):
     # print("aaaa")
     pos=ti.Vector([pos_xx,pos_yy])
     # print(pos)
@@ -924,7 +922,7 @@ def display_information():
 
 
 def main():
-    pause=1
+    pause=-1
     fream=0
     #液体矩形尺寸
     operate_p_cube_w=2
@@ -967,6 +965,9 @@ def main():
     旋转开关=-1
     清除粒子开关=-1
 
+    擦除的搜索半径=0.2
+
+
     build_boundary()
     demo1()
 
@@ -991,6 +992,10 @@ def main():
                 if(gui.is_pressed(ti.GUI.SHIFT)):
                     search_circular(e.pos[0]*res[0] /screen_to_world_ratio,e.pos[1]*res[1] /screen_to_world_ratio)
                     # 范围边界变流体(e.pos[0]*res[0] /screen_to_world_ratio,e.pos[1]*res[0] /screen_to_world_ratio)
+
+                elif gui.is_pressed('v'):
+                    范围边界变流体(e.pos[0]*res[0] /screen_to_world_ratio,e.pos[1]*res[0] /screen_to_world_ratio,擦除的搜索半径)
+
 
                 elif(gui.is_pressed(ti.GUI.CTRL)):
                     add_circular(e.pos[0]*res[0] /screen_to_world_ratio,e.pos[1]*res[1] /screen_to_world_ratio,operate_c_r,0,0,0,0,operate_spring_detect,operate_spring_length)  
@@ -1164,6 +1169,17 @@ def main():
                     if operate_c_r>0.06:
                         operate_c_r-=0.01
                         print("之后生成圆形半径为:",operate_c_r)
+
+
+            elif gui.is_pressed('v'):
+                if(gui.is_pressed(ti.GUI.SHIFT)):
+                    if(擦除的搜索半径<0.8):
+                        擦除的搜索半径+=0.01
+                        print("擦除的搜索半径修改为:",擦除的搜索半径)
+                if(gui.is_pressed(ti.GUI.CTRL)):
+                    if(擦除的搜索半径>0.02):
+                        擦除的搜索半径-=0.01
+                        print("擦除的搜索半径修改为:",擦除的搜索半径)
 
 
             elif gui.is_pressed('r'):#清空所有圆
