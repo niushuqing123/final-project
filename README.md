@@ -19,6 +19,12 @@
 -README.MD
 -xixi.py
 ```
+## 操作手册（Optional）
+
+```
+-README.MD
+-xixi.py
+```
 
 ## 运行方式
 直接运行xixi.py即可
