@@ -567,7 +567,7 @@ def 一个水枪(水枪位置,水枪速度,material):
 
 @ti.kernel
 def delete_particle(num1:ti.i32):
-    
+
     if(particle_num[None]>作为边界的的粒子):
         num2 =particle_num[None]
         particle_num[None]-=num1
@@ -1124,7 +1124,7 @@ def main():
                         wheel_sizeL-=0.01
                         print("轮子半径修改为:",wheel_sizeL)
 
-            elif gui.is_pressed('3'):
+            elif gui.is_pressed('0'):
                 if(gui.is_pressed(ti.GUI.SHIFT)):
                     if(wheel_c_r<1.8):
                         wheel_c_r+=0.01
@@ -1288,7 +1288,7 @@ def main():
             if 清除粒子开关==1:
                 delete_particle(5)
                 
-            for i in range(4):
+            for i in range(8):
                 substep()
         
 
