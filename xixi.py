@@ -438,10 +438,10 @@ def build_boundary():
         add_particle(i/边界粒度,离墙距离,0,0,2,0) 
     #上
     for i in range(边界数量):
-        add_particle(i/边界粒度,10.24-离墙距离,0,0,2,0)     
+        add_particle(i/边界粒度,res[0] /screen_to_world_ratio-离墙距离,0,0,2,0)     
     #右
     for i in range(边界数量):
-        add_particle(10.24-离墙距离,i/边界粒度,0,0,2,0) 
+        add_particle(res[0] /screen_to_world_ratio-离墙距离,i/边界粒度,0,0,2,0) 
 
     global 作为边界的的粒子
     作为边界的的粒子=particle_num[None]
@@ -906,11 +906,11 @@ def demo1():
 
     add_particle_cube((1,8),(2,2),1,0)
 
-    p_bondary((0.028*10.24,0.8*10.24),(0.3*10.24,0.4*10.24),0.02)
+    p_bondary((0.028*res[0] /screen_to_world_ratio,0.8*res[1] /screen_to_world_ratio),(0.3*res[0] /screen_to_world_ratio,0.4*res[1] /screen_to_world_ratio),0.02)
 
-    build_a_chain((0.7*10.24,0.9*10.24),(0.9*10.24,0.9*10.24),0.1,1,1,1.8)
+    build_a_chain((0.7*res[0] /screen_to_world_ratio,0.9*res[1] /screen_to_world_ratio),(0.9*res[0] /screen_to_world_ratio,0.9*res[1] /screen_to_world_ratio),0.1,1,1,1.8)
 
-    add_circular_cube(0.4*10.24,0.08*10.24,(0.4,0.6),0.1)
+    add_circular_cube(0.4*res[0] /screen_to_world_ratio,0.08*res[1] /screen_to_world_ratio,(0.4,0.6),0.1)
 
 
 
@@ -985,15 +985,15 @@ def main():
             if e.key in [ti.GUI.ESCAPE, ti.GUI.EXIT]:
                 exit()
             elif e.key == ti.GUI.LMB:  # 鼠标左键，增加粒子
-                # add_circular(e.pos[0]*10.24,e.pos[1]*10.24,operate_c_r,0,0,0,0,operate_spring_detect,operate_spring_length)  
-                # add_particle(e.pos[0]*10.24,e.pos[1]*10.24,0,0,1,0x956333)
-                # attract_lastone(e.pos[0]*10.24,e.pos[1]*10.24)
+                # add_circular(e.pos[0]*res[0] /screen_to_world_ratio,e.pos[1]*res[0] /screen_to_world_ratio,operate_c_r,0,0,0,0,operate_spring_detect,operate_spring_length)  
+                # add_particle(e.pos[0]*res[0] /screen_to_world_ratio,e.pos[1]*res[0] /screen_to_world_ratio,0,0,1,0x956333)
+                # attract_lastone(e.pos[0]*res[0] /screen_to_world_ratio,e.pos[1]*res[0] /screen_to_world_ratio)
                 if(gui.is_pressed(ti.GUI.SHIFT)):
-                    search_circular(e.pos[0]*10.24,e.pos[1]*10.24)
-                    # 范围边界变流体(e.pos[0]*10.24,e.pos[1]*10.24)
+                    search_circular(e.pos[0]*res[0] /screen_to_world_ratio,e.pos[1]*res[1] /screen_to_world_ratio)
+                    # 范围边界变流体(e.pos[0]*res[0] /screen_to_world_ratio,e.pos[1]*res[0] /screen_to_world_ratio)
 
                 elif(gui.is_pressed(ti.GUI.CTRL)):
-                    add_circular(e.pos[0]*10.24,e.pos[1]*10.24,operate_c_r,0,0,0,0,operate_spring_detect,operate_spring_length)  
+                    add_circular(e.pos[0]*res[0] /screen_to_world_ratio,e.pos[1]*res[1] /screen_to_world_ratio,operate_c_r,0,0,0,0,operate_spring_detect,operate_spring_length)  
 
             elif e.key == ti.GUI.RMB:  # 鼠标右键，增加粒子，带弹簧，如果按下ctrl，就是固定点
                 if gui.is_pressed('1'):
@@ -1030,21 +1030,21 @@ def main():
                 elif gui.is_pressed('l'):#粒子边界画线
                     x_LMB_line.append(gui.get_cursor_pos())
                     if(len(x_LMB_line) == 2):
-                        p_bondary((x_LMB_line[0][0]*10.24,x_LMB_line[0][1]*10.24),
-                        (x_LMB_line[1][0]*10.24,x_LMB_line[1][1]*10.24),0.02)
+                        p_bondary((x_LMB_line[0][0]*res[0] /screen_to_world_ratio,x_LMB_line[0][1]*res[1] /screen_to_world_ratio),
+                        (x_LMB_line[1][0]*res[0] /screen_to_world_ratio,x_LMB_line[1][1]*res[1] /screen_to_world_ratio),0.02)
                         # print(x_LMB_line)
                         x_LMB_line = []
                 elif gui.is_pressed('j'):#弹性圆画线
                     x_LMB_chain.append(gui.get_cursor_pos())
                     if(len(x_LMB_chain) == 2):
-                        build_a_chain((x_LMB_chain[0][0]*10.24,x_LMB_chain[0][1]*10.24),
-                        (x_LMB_chain[1][0]*10.24,x_LMB_chain[1][1]*10.24),chain_粒度,1,1,chain_弹簧比例)
+                        build_a_chain((x_LMB_chain[0][0]*res[0] /screen_to_world_ratio,x_LMB_chain[0][1]*res[1] /screen_to_world_ratio),
+                        (x_LMB_chain[1][0]*res[0] /screen_to_world_ratio,x_LMB_chain[1][1]*res[1] /screen_to_world_ratio),chain_粒度,1,1,chain_弹簧比例)
                         # print(x_LMB_c_line)
                         x_LMB_chain = []
                 elif gui.is_pressed('m'):
-                    build_a_wheel((e.pos[0]*10.24,e.pos[1]*10.24),wheel_sizeL,wheel_c_r,1)
+                    build_a_wheel((e.pos[0]*res[0] /screen_to_world_ratio,e.pos[1]*res[1] /screen_to_world_ratio),wheel_sizeL,wheel_c_r,1)
                 else:
-                    add_circular(e.pos[0]*10.24,e.pos[1]*10.24,operate_c_r,0,0,1,int(gui.is_pressed(ti.GUI.CTRL)),operate_spring_detect,operate_spring_length)
+                    add_circular(e.pos[0]*res[0] /screen_to_world_ratio,e.pos[1]*res[1] /screen_to_world_ratio,operate_c_r,0,0,1,int(gui.is_pressed(ti.GUI.CTRL)),operate_spring_detect,operate_spring_length)
 
             #键盘按钮
             elif gui.is_pressed('1'):#水龙头开关
@@ -1173,11 +1173,11 @@ def main():
                 switch_fixed()
 
             elif gui.is_pressed('h'):#弄一个弹性矩形
-                add_circular_cube(e.pos[0]*10,e.pos[1]*10,(operate_c_cube_w,operate_c_cube_h),operate_c_r)
+                add_circular_cube(e.pos[0]*res[0] /screen_to_world_ratio,e.pos[1]*res[1] /screen_to_world_ratio,(operate_c_cube_w,operate_c_cube_h),operate_c_r)
                 # add_circular_cube(e.pos[0]*10,e.pos[1]*10,(0.5,1),0.07)
                 
 
-            elif gui.is_pressed('g'):
+            elif gui.is_pressed('y'):
                 if(是否反重力液体==1):
                     是否反重力液体=3
                     print("生成的液体设置为:反重力!")
@@ -1186,7 +1186,7 @@ def main():
                     print("生成的液体设置为:正常重力!")
 
             elif gui.is_pressed('o'):
-                add_particle_cube((e.pos[0]*10.24,e.pos[1]*10.24),(operate_p_cube_w,operate_p_cube_h),是否反重力液体,0)
+                add_particle_cube((e.pos[0]*res[0] /screen_to_world_ratio,e.pos[1]*res[1] /screen_to_world_ratio),(operate_p_cube_w,operate_p_cube_h),是否反重力液体,0)
 
             #上一个边界粒子线变液体，全部边界变液体
             elif gui.is_pressed('b'):
@@ -1273,7 +1273,7 @@ def main():
             fream+=1
             if gui.is_pressed(ti.GUI.LMB):
                 c = gui.get_cursor_pos()
-                attract_one(c[0]*10.24,c[1]*10.24)
+                attract_one(c[0]*res[0] /screen_to_world_ratio,c[1]*res[1] /screen_to_world_ratio)
 
             if(fream%2==0):
                 if 水枪开关1==1:
