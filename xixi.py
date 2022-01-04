@@ -1281,7 +1281,7 @@ def main():
         #圆一碰边界，边界粒子变液体
         
 
-
+        #浮力
         #ggui？？
         #流体表面重建？？？？
 
@@ -1302,9 +1302,9 @@ def main():
                 applied_rotating(旋转圆下标buff[0],旋转圆下标buff[1])
 
             if 清除粒子开关==1:
-                delete_particle(5)
+                delete_particle(10)
                 
-            for i in range(8):
+            for i in range(4):
                 substep()
         
 
