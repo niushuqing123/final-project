@@ -37,7 +37,7 @@ viscosity = 0.05  # 黏性
 density_0 = 1000.0  # 参照密度
 mass = m_V * density_0
 
-dt =2e-4
+dt =3e-4
 
 
 exponent = 7.0
@@ -104,14 +104,15 @@ c_f=ti.Vector.field(dim, dtype=float)
 c_r=ti.field(float)
 c_m=ti.field(float)
 
-circular_node.place(c_x,c_v,c_f,c_r,c_m)
+fixed = ti.field(int)
+
+circular_node.place(c_x,c_v,c_f,c_r,c_m,fixed)
 
 
 Young_modulus=2000000
 
 # 弹簧数据结构
 rest_length = ti.field(dtype=float, shape=(circular_max_num, circular_max_num))
-fixed = ti.field(dtype=ti.i32, shape=circular_max_num)
 
 Young_modulus_spring=921000
 dashpot_damping=300#弹簧减震器
@@ -249,16 +250,17 @@ def solve():
 
 
     边界压力权重=1
-    边界粘性权重=1
-    边界系数_exponent=exponent
+    # 边界粘性权重=1
+    # 边界系数_exponent=exponent
 
     #根据密度,计算压力
     # compute_pressure_forces()            
     for i in range(particle_num[None]):#可以合并到上面的循环里面
         density[i] = ti.max(density[i], density_0)
-        if(material[i]==2):
-            边界系数_exponent=7
-        pressure[i] = stiffness * (ti.pow(density[i] / density_0, 边界系数_exponent) - 1.0)
+        # if(material[i]==2):
+            # 边界系数_exponent=7
+        # pressure[i] = stiffness * (ti.pow(density[i] / density_0, 边界系数_exponent) - 1.0)
+        pressure[i] = stiffness * (ti.pow(density[i] / density_0,exponent) - 1.0)
     
 
     # 重力、计算压力、计算粘性力
@@ -275,13 +277,14 @@ def solve():
             p_j = particle_neighbors[i, j]
             if(material[p_j]==2):
                 # 边界压力权重
-                边界压力权重=3
-                边界粘性权重=1
+                边界压力权重=4
+                # 边界粘性权重=1
             x_j = x[p_j]
             #计算压力
             dv += 边界压力权重*pressure_force(i, p_j, x_i-x_j)
             # 计算粘性力
-            dv += 边界粘性权重*viscosity_force(i, p_j, x_i - x_j)
+            # dv += 边界粘性权重*viscosity_force(i, p_j, x_i - x_j)
+            dv += viscosity_force(i, p_j, x_i - x_j)
         d_velocity[i] = dv
 
 
@@ -299,7 +302,7 @@ def solve():
     
     #仍然保留简陋的边界条件，用于限制坐标
     # 虽然粒子也可以当边界，但是高速粒子可以穿透，仍然需要控制一下
-    # '''
+    
     for i in range(particle_num[None]):
         if material[i] ==2:
             continue
@@ -308,22 +311,22 @@ def solve():
         离墙距离2=离墙距离+0.01
         if pos[0] < 离墙距离2:
             # print("a")
-            x[i][0]+=-1.2*(pos[0] - 离墙距离)
+            x[i][0]+=-1.2*(pos[0] - 离墙距离2)
             # v[i][0]+=4
         if pos[0] > bound[0] - 离墙距离2:
             # print("y")
-            x[i][0]-=-1.2*( bound[0] - 离墙距离-pos[0])
+            x[i][0]-=-1.2*( bound[0] - 离墙距离2-pos[0])
             # v[i][0]-=4
         if pos[1] > bound[1] - 离墙距离2:
             # print("s")
-            x[i][1]-=-1.2*(bound[1] - 离墙距离-pos[1])
+            x[i][1]-=-1.2*(bound[1] - 离墙距离2-pos[1])
             # v[i][1]-=4
         if pos[1] < 离墙距离2:
             # print("x")
-            x[i][1]+=-1.2*(pos[1] - 离墙距离)
+            x[i][1]+=-1.2*(pos[1] - 离墙距离2)
             # v[i][1]+=4
 
-    # '''
+    
     
     
     # 成功将圆形碰撞耦合了进来！圆与粒子交互
@@ -337,10 +340,12 @@ def solve():
                 
                 # if(material[j]==1):#只与流动的粒子作用，因为这个算法不太完善
                 #制作一个切向加速度，近似摩擦力.n为垂直与单位向量的法向量，vrel是速度在法线上的投影
+                
                 n=ti.Vector([direction_vector[1],-direction_vector[0]])
                 v_rel = (c_v[i] - v[j]).dot(n)
                 v[j]-=v_rel*n*dt*7
                 c_v[i]+=v_rel*n*dt*7
+                
 
                 if(material[j]==1):x[j]-=direction_vector*direction_vector_length*0.05#把粒子往出推一点，仅推一点，起到缓和冲击力就作用，这一操作会导致水里的物体一动，周围的粒子会跟着震动。。
                 elastic_force=2000*(direction_vector/direction_vector_length)*(c_r[i]+particle_radius-direction_vector_length)
@@ -529,8 +534,8 @@ def 边界粒子变流体(上一个粒子画的线):
             material[i] = 1
 
 
-
-def 范围边界变流体(pos_xx: ti.f32, pos_yy: ti.f32,搜索半径):
+# @ti.kernel
+def 范围边界变流体(pos_xx: ti.f32, pos_yy: ti.f32,搜索半径: ti.f32):
     # print("aaaa")
     pos=ti.Vector([pos_xx,pos_yy])
     # print(pos)
@@ -543,6 +548,7 @@ def 范围边界变流体(pos_xx: ti.f32, pos_yy: ti.f32,搜索半径):
             # print(d)
             if(d<=搜索半径):
                 material[i]=1
+                color[i]=0x87CEFA
                 print("sss")
 
 
@@ -855,8 +861,12 @@ def applied_rotating(num1:ti.i32,num2:ti.i32):
     num1 += 1
     for i in range(num1, num2):
         #本质上是求一个切线，法向量乘一个系数作为加速度
-        c_v[i][0] += (c_x[i][1]-x1[1])*10
-        c_v[i][1] += -(c_x[i][0]-x1[0])*10
+
+        c_v[i][0] = (c_x[i][1]-x1[1])*80#速度恒定
+        c_v[i][1] = -(c_x[i][0]-x1[0])*80    
+        
+        # c_v[i][0] += (c_x[i][1]-x1[1])*80#加速度恒定
+        # c_v[i][1] += -(c_x[i][0]-x1[0])*80
         # 施加转速注意事项：方向与默认方向相同或相反，根据圆心点减去圆上点或者圆上点减圆心点决定
         # 统一自转方向
 
@@ -908,9 +918,15 @@ def demo1():
 
     build_a_chain((0.7*res[0] /screen_to_world_ratio,0.9*res[1] /screen_to_world_ratio),(0.9*res[0] /screen_to_world_ratio,0.9*res[1] /screen_to_world_ratio),0.1,1,1,1.8)
 
-    add_circular_cube(0.4*res[0] /screen_to_world_ratio,0.08*res[1] /screen_to_world_ratio,(0.4,0.6),0.1)
+    # add_circular_cube(0.4*res[0] /screen_to_world_ratio,0.08*res[1] /screen_to_world_ratio,(0.4,0.6),0.1)
 
 
+
+def demo2():
+
+    p_bondary((0.6*res[0] /screen_to_world_ratio,0.01*res[1] /screen_to_world_ratio),(0.61*res[0] /screen_to_world_ratio,0.8*res[1] /screen_to_world_ratio),0.02)
+
+    # build_a_wheel((3.6,2.6),0.6,0.1,1)
 
 
 
@@ -940,7 +956,7 @@ def main():
     wheel_c_r=0.1
 
     #链子的细度和硬度
-    chain_粒度=0.4
+    chain_粒度=0.2
     chain_弹簧比例=1.8
 
     #反重力液体
@@ -969,7 +985,8 @@ def main():
 
 
     build_boundary()
-    demo1()
+    # demo1()
+    # demo2()
 
     # add_particle_cube((2,2),(10,3),1)
 
@@ -1281,7 +1298,7 @@ def main():
         #圆一碰边界，边界粒子变液体
         
 
-        #浮力
+
         #ggui？？
         #流体表面重建？？？？
 
@@ -1302,9 +1319,9 @@ def main():
                 applied_rotating(旋转圆下标buff[0],旋转圆下标buff[1])
 
             if 清除粒子开关==1:
-                delete_particle(10)
+                delete_particle(5)
                 
-            for i in range(4):
+            for i in range(3):
                 substep()
         
 
@@ -1335,8 +1352,8 @@ def main():
 
         #画线是严重帧率的事情，能不能把要画的线放到数据结构里，用kernel算好再画
         #圆比较多的时候建议注释掉画线这部分''''''
-        '''
-        for i in range(c_num):
+        
+        '''for i in range(c_num):
             for j in range(i+1, c_num):  # 原本是for j in range(n),实际上只需从上一层循环的i开始即可，可以省去一半的遍历量和绘图量
                 if rest_length[i, j] != 0:
                     gui.line(begin=X[i] * screen_to_world_ratio / res, end=X[j] * screen_to_world_ratio / res,
@@ -1351,108 +1368,3 @@ if __name__ == "__main__":
     main()
     
 
-
-
-'''
-#为了提速，尝试将画线改为kernel函数，但是失败了，以后再修吧
-@ti.kernel
-def p_bondary(pos1_x:ti.f32,pos1_y:ti.f32,pos2_x:ti.f32,pos2_y:ti.f32,dxdy:ti.f32):
-    #两点确定斜率，用描点画线的方式近似画一个边界
-    # dxdy粒度
-    #换位的目的是，永远只考虑从低往高画
-    pos1x=0
-    pos1y=0
-        
-    pos2x=0
-    pos2y=0
-    if (pos1_y <=pos2_y):
-        pos1x=pos1_x
-        pos1y=pos1_y
-        
-        pos2x=pos2_x
-        pos2y=pos2_y
-    else:
-        pos1x=pos2_x
-        pos1y=pos2_y
-
-        pos2x=pos1_x
-        pos2y=pos1_y
-
-    #两点坐标之差算斜率k
-    print(pos2y)
-    print(pos1y)
-    a=pos2y-pos1y
-    b=pos2x-pos1x
-    k=a/b
-
-    dx=dy=dxdy#默认都为一倍的粒度
-
-    if k<0:
-        if(k>-1):
-            dx*=-1
-            dy=k*dxdy*-1#dy要为正数
-        else:
-            dx=(1/k)*dxdy
-    else:
-        if(k>=1):
-            dx=(1/k)*dxdy
-        else:
-            dy=k*dxdy
-
-    # print(dx)
-    # print(dy)
-    
-    posx=posy=0
-    #原本调用了addparticles,但是改成kernel之后，因为add是kernel，所以没法用了，只能写开
-    # add_particle((pos1x+posx),(pos1y+posy),0,0,2,0x956333) 
-
-    if(k<0):
-        while(1):
-            if(pos1x+posx>pos2x):posx+=dx#对于斜率的正负要做出区分
-            if(pos1y+posy<pos2y):posy+=dy
-            if(pos1x+posy>=pos2y):break
-            # print((posx,posy))
-            # print(x1)
-            
-            num =particle_num[None]
-            print(num)
-
-            # x[num][0] = x1[0]*10
-            # x[num][1] = x1[1]*10
-
-            x[num]= [posx,posy]
-            print(x[num])
-
-            v[num]= [0,0]
-            density[num] = 1000
-
-            material[num] = 2
-            color[num] = 0x956333
-            particle_num[None] += 1
-
-
-            # add_particle_forline(((pos1x+posx),(pos1y+posy)),(0,0),2,0x956333) 
-
-
-    else:
-        while(1):
-            if(pos1x+posx<pos2x):posx+=dx#对于斜率的正负要做出区分
-            if(pos1y+posy<pos2y):posy+=dy
-            if(pos1y+posy>=pos2y):break
-            # print((posx,posy))
-            num =particle_num[None]
-            print(num)
-
-            # x[num][0] = x1[0]*1
-            # x[num][1] = x1[1]*10
-
-            x[num]= [posx,posy]
-            print(x[num])
-            v[num]= [0,0]
-            density[num] = 1000
-
-            material[num] = 2
-            color[num] = 0x956333
-            particle_num[None] += 1
-            # add_particle_forline(((pos1x+posx),(pos1y+posy)),(0,0),2,0x956333) 
-'''
